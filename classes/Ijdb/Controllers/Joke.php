@@ -1,6 +1,11 @@
 <?php
 
-class JokeController
+namespace Ijdb\Controllers;
+
+use DateTime;
+use Ninja\DatabaseTable;
+
+class Joke
 {
     private $authorsTable;
     private $jokesTable;
@@ -54,25 +59,26 @@ class JokeController
         header('Location: /joke/list');
     }
 
+    public function saveEdit()
+    {
+        $joke = $_POST['joke'];
+        $joke['jokedate'] = new DateTime();
+        $joke['authorid'] = 1;
+
+        $this->jokesTable->save($joke);
+
+        header('Location: /joke/list');
+    }
+
     public function edit()
     {
-        if (isset($_POST['joke'])) {
-            $joke = $_POST['joke'];
-            $joke['jokedate'] = new DateTime();
-            $joke['authorid'] = 1;
-
-            $this->jokesTable->save($joke);
-
-            header('Location: /joke/list');
-            exit();
-        } else {
-            if (isset($_GET['id'])) {
-                $joke = $this->jokesTable->findById($_GET['id']);
-            }
-
-            $title = 'Edit Joke';
-
-            return ['template' => 'editjoke.html.php', 'title' => $title, 'variables' => ['joke' => $joke ?? null]];
+        if (isset($_GET['id'])) {
+            $joke = $this->jokesTable->findById($_GET['id']);
         }
+
+        $title = 'Edit Joke';
+
+        return ['template' => 'editjoke.html.php', 'title' => $title, 'variables' => ['joke' => $joke ?? null]];
+
     }
 }

@@ -1,4 +1,11 @@
 <?php
+
+namespace Ninja;
+
+use DateTime;
+use PDO;
+use PDOException;
+
 class DatabaseTable
 {
     private $pdo;

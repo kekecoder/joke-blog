@@ -1,13 +1,17 @@
 <?php
 
+use Ijdb\IjdbRoutes;
+use Ninja\EntryPoint;
+
 try {
 
-    require_once __DIR__ . '/classes/EntryPoint.php';
-    require_once __DIR__ . '/classes/IjdbRoutes.php';
+    include __DIR__ . '/include/autoload.php';
 
     $route = ltrim(strtok($_SERVER['REQUEST_URI'], '?'), '/');
 
-    $entryPoint = new EntryPoint($route, new ijdbRoutes());
+    $requests = $_SERVER['REQUEST_METHOD'];
+
+    $entryPoint = new EntryPoint($route, $requests, new IjdbRoutes());
     $entryPoint->run();
 
 } catch (PDOException $e) {
