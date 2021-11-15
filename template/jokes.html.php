@@ -10,12 +10,14 @@
 $date = new DateTime($joke['jokedate']);
 echo $date->format('jS F Y');
 ?>
+  <?php if ($userId == $joke['authorid']): ?>
           <a href="/joke/edit?id=<?=$joke['jokeid']?>">Edit Joke</a>
 
       <form action="/joke/delete" method="post">
         <input type="hidden" name="jokeid" value="<?=$joke['jokeid']?>">
         <input type="submit" value="Delete" class="block-submit">
       </form>
+      <?php endif?>
     </p>
   </blockquote>
   <?php endforeach;?>

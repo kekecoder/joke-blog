@@ -18,4 +18,6 @@ try {
     $title = 'An error has occured';
 
     $output = "Sorry server busy " . $e->getMessage() . ' in ' . $e->getFile() . ' : ' . $e->getLine();
+
+    include __DIR__ . '/template/layout.html.php';
 }

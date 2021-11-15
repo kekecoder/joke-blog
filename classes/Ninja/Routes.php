@@ -2,7 +2,10 @@
 
 namespace Ninja;
 
+use Ninja\Authentication;
+
 interface Routes
 {
-    public function getRoutes();
+    public function getRoutes(): array;
+    public function getAuthentication(): Authentication;
 }

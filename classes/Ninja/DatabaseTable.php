@@ -12,7 +12,7 @@ class DatabaseTable
     private $table;
     private $primaryKey;
 
-    public function __construct(PDO $pdo, $table, $primaryKey)
+    public function __construct(PDO $pdo, string $table, string $primaryKey)
     {
         $this->pdo = $pdo;
         $this->table = $table;
@@ -42,6 +42,19 @@ class DatabaseTable
         $query = $this->query($query, $parameter);
 
         return $query->fetch();
+    }
+
+    public function find($column, $value)
+    {
+        $query = 'SELECT * FROM ' . $this->table . ' WHERE ' . $column . ' = :value';
+
+        $parameter = [
+            'value' => $value,
+        ];
+
+        $query = $this->query($query, $parameter);
+
+        return $query->fetchAll();
     }
 
     private function insert($fields)
@@ -79,7 +92,7 @@ class DatabaseTable
 
         $query .= ' WHERE `' . $this->primaryKey . '` = :primaryKey';
 
-        $fields['primaryKey'] = $fields['jokeid'];
+        $fields['primaryKey'] = $fields['id'];
 
         $fields = $this->processDates($fields);
 
