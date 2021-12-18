@@ -11,15 +11,15 @@ if (!empty($errors)): ?>
     </div>
 <?php endif;?>
 
-<form action="" method="post">
-    <label for="email">Enter Your Email Address</label>
-    <input type="text" name="author[authoremail]" id="email" value="<?=$author['authoremail'] ?? ''?>">
+<form action="" method="post" class="forms">
+    <label for="email">Email Address</label>
+    <input type="text" name="author[authoremail]" id="email" value="<?=$author['authoremail'] ?? ''?>" class="form-control">
 
     <label for="name">Your Name</label>
-    <input type="text" name="author[authorname]" id="name" value="<?=$author['authorname'] ?? ''?>">
+    <input type="text" name="author[authorname]" id="name" value="<?=$author['authorname'] ?? ''?>" class="form-control">
 
     <label for="password">Password</label>
-    <input type="password" name="author[password]" id="password">
+    <input type="password" name="author[password]" id="password" class="form-control">
 
-    <input type="submit" value="Register account" name="submit">
+    <input type="submit" value="Register" name="submit" class="submit reg">
 </form>

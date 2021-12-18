@@ -11,12 +11,16 @@ class DatabaseTable
     private $pdo;
     private $table;
     private $primaryKey;
+    private $className;
+    private $constructorArgs;
 
-    public function __construct(PDO $pdo, string $table, string $primaryKey)
+    public function __construct(PDO $pdo, string $table, string $primaryKey, string $className = '\stdClass', array $constructorArgs = [])
     {
         $this->pdo = $pdo;
         $this->table = $table;
         $this->primaryKey = $primaryKey;
+        $this->className = $className;
+        $this->constructorArgs = $constructorArgs;
     }
 
     private function query($sql, $parameter = [])
@@ -41,7 +45,7 @@ class DatabaseTable
 
         $query = $this->query($query, $parameter);
 
-        return $query->fetch();
+        return $query->fetchObject($this->className, $this->constructorArgs);
     }
 
     public function find($column, $value)
@@ -54,7 +58,7 @@ class DatabaseTable
 
         $query = $this->query($query, $parameter);
 
-        return $query->fetchAll();
+        return $query->fetchAll(PDO::FETCH_CLASS, $this->className, $this->constructorArgs);
     }
 
     private function insert($fields)
@@ -79,6 +83,8 @@ class DatabaseTable
         $fields = $this->processDates($fields);
 
         $this->query($query, $fields);
+
+        return $this->pdo->lastInsertId();
     }
 
     private function update($fields)
@@ -103,7 +109,7 @@ class DatabaseTable
     {
         $result = $this->query('SELECT * FROM `' . $this->table . '`');
 
-        return $result->fetchAll();
+        return $result->fetchAll(PDO::FETCH_CLASS, $this->className, $this->constructorArgs);
     }
 
     public function delete($id)
@@ -111,6 +117,15 @@ class DatabaseTable
         $parameter = [':id' => $id];
 
         $this->query('DELETE FROM `' . $this->table . '` WHERE `' . $this->primaryKey . '` = :id', $parameter);
+    }
+
+    public function deleteWhere($column, $value)
+    {
+        $query = 'DELETE FROM ' . $this->table . ' WHERE ' . $column . ' = :value';
+
+        $parameter = ['value' => $value];
+
+        $query = $this->query($query, $parameter);
     }
 
     private function processDates($fields)
@@ -125,14 +140,25 @@ class DatabaseTable
 
     public function save($record)
     {
+        $entity = new $this->className(...$this->constructorArgs);
+
         try {
             if ($record[$this->primaryKey] == '') {
                 $record[$this->primaryKey] = null;
             }
-            $this->insert($record);
+            $insertid = $this->insert($record);
+
+            $entity->{$this->primaryKey} = $insertid;
         } catch (PDOException $e) {
             $this->update($record);
         }
-    }
 
+        foreach ($record as $key => $value) {
+            if (!empty($value)) {
+                $entity->$key = $value;
+            }
+        }
+
+        return $entity;
+    }
 }

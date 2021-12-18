@@ -10,31 +10,24 @@ class Joke
 {
     private $authorsTable;
     private $jokesTable;
+    private $categoriesTable;
+    private $authentication;
 
-    public function __construct(DatabaseTable $jokesTable, DatabaseTable $authorsTable, Authentication $authentication)
+    public function __construct(DatabaseTable $jokesTable, DatabaseTable $authorsTable, Authentication $authentication, DatabaseTable $categoriesTable)
     {
         $this->jokesTable = $jokesTable;
         $this->authorsTable = $authorsTable;
         $this->authentication = $authentication;
+        $this->categoriesTable = $categoriesTable;
     }
 
     public function lists()
     {
-        $result = $this->jokesTable->findAll();
-
-        $jokes = [];
-
-        foreach ($result as $joke) {
-            $author = $this->authorsTable->findById($joke['authorid']);
-
-            $jokes[] = [
-                'jokeid' => $joke['jokeid'],
-                'joketext' => $joke['joketext'],
-                'jokedate' => $joke['jokedate'],
-                'authorname' => $author['authorname'],
-                'authoremail' => $author['authoremail'],
-                'authorid' => $author['id'],
-            ];
+        if (isset($_GET['category'])) {
+            $category = $this->categoriesTable->findById($_GET['category']);
+            $jokes = $category->getJokes();
+        } else {
+            $jokes = $this->jokesTable->findAll();
         }
 
         $title = 'Joke List';
@@ -46,7 +39,8 @@ class Joke
         return ['template' => 'jokes.html.php', 'title' => $title, 'variables' => [
             'totalJokes' => $totalJokes,
             'jokes' => $jokes,
-            'userId' => $author['id'] ?? null,
+            'userId' => $author->id ?? null,
+            'categories' => $this->categoriesTable->findAll(),
         ]];
 
     }
@@ -62,13 +56,13 @@ class Joke
     {
         $author = $this->authentication->getUser();
 
-        $joke = $this->jokesTable->findById($_POST['jokeid']);
+        $joke = $this->jokesTable->findById($_POST['id']);
 
-        if ($joke['authorid'] != $author['id']) {
+        if ($joke->authorid != $author->id) {
             return;
         }
 
-        $this->jokesTable->delete($_POST['jokeid']);
+        $this->jokesTable->delete($_POST['id']);
 
         header('Location: /joke/list');
     }
@@ -77,26 +71,49 @@ class Joke
     {
         $author = $this->authentication->getUser();
 
-        if (isset($_GET['jokeid'])) {
-            $joke = $this->jokesTable->findById($_GET['jokeid']);
+        if (isset($_GET['id'])) {
+            $joke = $this->jokesTable->findById($_GET['id']);
 
-            if ($joke['authorid'] != $author['id']) {
+            if ($joke->authorid != $author->id) {
                 return;
             }
         }
 
         $joke = $_POST['joke'];
         $joke['jokedate'] = new DateTime();
-        $joke['authorid'] = $author['id'];
+        $joke['authorid'] = $author->id;
 
-        $this->jokesTable->save($joke);
+        $joketext = $joke['joketext'];
 
-        header('Location: /joke/list');
+        $valid = true;
+        $errors = [];
+
+        if (empty($joketext)) {
+            $valid = false;
+            $errors[] = 'Cannot be left blank';
+        }
+        if ($valid == true) {
+            $jokeEntity = $author->addJoke($joke);
+
+            $jokeEntity->clearCategories();
+
+            foreach ($_POST['category'] as $categoryid) {
+                $jokeEntity->addCategory($categoryid);
+            }
+
+            header('Location: /joke/list');
+        } else {
+            return ['template' => 'editjoke.html.php', 'title' => 'Error', 'variables' => [
+                'errors' => $errors,
+            ],
+            ];
+        }
     }
 
     public function edit()
     {
         $author = $this->authentication->getUser();
+        $categories = $this->categoriesTable->findAll();
 
         if (isset($_GET['id'])) {
             $joke = $this->jokesTable->findById($_GET['id']);
@@ -104,7 +121,7 @@ class Joke
 
         $title = 'Edit Joke';
 
-        return ['template' => 'editjoke.html.php', 'title' => $title, 'variables' => ['joke' => $joke ?? null, 'userId' => $author['id'] ?? null]];
+        return ['template' => 'editjoke.html.php', 'title' => $title, 'variables' => ['joke' => $joke ?? null, 'userId' => $author->id ?? null, 'categories' => $categories]];
 
     }
 }
