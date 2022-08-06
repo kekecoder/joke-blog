@@ -1,10 +1,10 @@
 <?php if (isset($error)):
-    echo '<div class="errors">' . $error . '</div';
+    echo '<div class="errors">' . $error . '</div>';
 endif?>
 
 <form action="" method="post" class="forms">
     <label for="email">Enter Your Email Address</label>
-    <input type="text" name="authoremail" id="email" class="form-control">
+    <input type="text" name="authoremail" id="email" class="form-control" value="<?=$author['authoremail'] ?? ''?>">
 
     <label for="password">Your Password</label>
     <input type="password" name="password" id="password" class="form-control">
